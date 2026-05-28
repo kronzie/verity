@@ -1,0 +1,14 @@
+# Python environment
+venv/
+__pycache__/
+*.pyc
+
+# Local Database
+vectorstore/
+
+# Secrets
+.env
+
+# Data (Optional, but good so you don't upload giant PDFs)
+data/*.pdf
+!data/sample.pdf  # Keep the sample PDF for testing
