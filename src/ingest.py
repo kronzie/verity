@@ -1,5 +1,6 @@
 import pdfplumber
 import os
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 def extract_pdf_text(pdf_path: str) -> str:
     """
@@ -29,23 +30,48 @@ def extract_pdf_text(pdf_path: str) -> str:
     # 4. Join all pages into a single cohesive string asset
     return "\n\n".join(full_text)
 
-# This block allows us to run this file directly to test it!
+# --- NEW FUNCTION (BOX 2) ---
+def chunk_text(text: str) -> list[str]:
+    """
+    Slices a massive string into overlapping 1000-character chunks to preserve
+    context for the vector database.
+    """
+    text_splitter = RecursiveCharacterTextSplitter(
+        # 1000 characters per chunk is roughly 250 words
+        chunk_size=1000,
+        # Overlap by 200 characters so context isn't lost at the boundaries
+        chunk_overlap=200,
+        length_function=len,
+        is_separator_regex=False,
+    )
+
+    # This splits our giant string into a Python List containing many smaller strings
+    chunks = text_splitter.split_text(text)
+    return chunks
+
+# --- EXECUTION BLOCK ---
 if __name__ == "__main__":
-    # 1. Define the path to your test PDF
-    # (Make sure you put a real PDF in the data folder and name it 'sample.pdf')
     test_pdf_path = "data/sample.pdf"
 
-    print(f"Attempting to extract text from: {test_pdf_path}...")
-
     try:
-        # 2. Run the extraction engine
+        # 1. Run Box 1
+        print(f"Extracting text from: {test_pdf_path}...")
         extracted_text = extract_pdf_text(test_pdf_path)
 
-        # 3. Print the results (just the first 1000 characters so it doesn't flood the terminal)
-        print("\n--- EXTRACTION SUCCESSFUL ---")
-        print(f"Total Characters Extracted: {len(extracted_text)}")
-        print("\n--- PREVIEW (First 1000 chars) ---")
-        print(extracted_text[:1000])
+        # 2. Run Box 2
+        print("Slicing text into chunks...")
+        text_chunks = chunk_text(extracted_text)
+
+        print("\n--- PIPELINE SUCCESSFUL ---")
+        print(f"Total Characters: {len(extracted_text)}")
+        print(f"Total Chunks Created: {len(text_chunks)}")
+
+        # 3. Print the 3rd chunk just to verify it looks correct
+        print("\n--- PREVIEW (Chunk #3) ---")
+        if len(text_chunks) >= 3:
+            print(text_chunks[2])
+        else:
+            print("Not enough text to make 3 chunks!")
 
     except Exception as e:
         print(f"\n[ERROR] Pipeline Failed: {e}")
