@@ -1,4 +1,5 @@
 # src/embed.py
+import chromadb
 from sentence_transformers import SentenceTransformer
 from src.ingest import extract_pdf_text, chunk_text
 
@@ -18,6 +19,34 @@ def generate_embeddings(chunks: list[str]):
     embeddings = model.encode(chunks, show_progress_bar=True)
 
     return embeddings
+
+def save_to_vectorstore(chunks: list[str], embeddings: list[list[float]], metadata: list[dict], persist_directory: str = "vectorstore"):
+    """
+    Takes text chunks, their mathematical vectors, and RBAC metadata,
+    and saves them permanently to the hard drive using ChromaDB.
+    """
+    print(f"Connecting to ChromaDB at ./{persist_directory} ...")
+
+    # TODO 1: PersistentClient is intended for local development and testing. Also there is EphemeralClient which stores all data in memory for testing, shouldn't we be using EphemeralClient?
+    client = chromadb.PersistentClient(path=persist_directory)
+
+    # TODO 2: Collections are the fundamental unit of storage and querying in Chroma.
+    collection = client.get_or_create_collection(name="verity_docs")
+
+    # TODO 3: I wasn't able to find it.
+    ids = [f"doc_{i}" for i in range(len(chunks))]
+
+    print("Writing data to disk...")
+
+    # TODO 4: Please explain, i found .add is used to add a new record to the collection, documents is a string[] var
+    collection.add(
+        documents=chunks,
+        embeddings=embeddings,
+        metadatas=metadata,
+        ids=ids
+    )
+    print("Successfully saved to ChromaDB!")
+    return True
 
 if __name__ == "__main__":
     test_pdf = "data/sample.pdf"
