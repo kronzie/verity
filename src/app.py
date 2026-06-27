@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 # We import the setup function from your new modular folder!
 from middlewares.cors import setup_cors
+from middlewares.security import setup_security
 
 print("Starting Verity API Gateway...")
 
@@ -12,6 +13,7 @@ app = FastAPI(title="Verity RAG API", version="1.0")
 # --- MIDDLEWARE HALLWAY ---
 # We call the function to attach the CORS bouncer
 setup_cors(app)
+setup_security(app)
 
 
 # --- DATA VALIDATION (The Menu) ---
